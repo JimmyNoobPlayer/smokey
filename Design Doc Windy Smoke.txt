@@ -1,0 +1,60 @@
+**********************
+Element Class
+
+Each element represents a cubical volume of air at a fixed location in 3D space. Inside this volume, different kinds of particulate matter or other airborne stuff will travel in and out. (and the atmosphere itself will also travel in and out, but that won't be tracked directly.) The Element's amount of pollution will change over time, but it's location will remain constant. For a very brief time period, the changes in the value of pollutant for this Element will be calculated, then updated (making many simplifying assumptions, for example assuming the change is constant over the brief time period)
+
+Data:
+x, y, z #physical location of this element. These values may not need to be stored if the Element Array can determine them easily.
+sizex, sizey, sizez #the actual size of the element. I'm pretty sure we don't need think about these values much, only in the Element Array.
+p #The most important value. The amount of pollutant in this element, a float value (should always be positive)
+p_prime #the derivative of the amount of pollution with respect to time. a float value.
+
+Methods:
+modify_p_prime(change_in_derivative):
+ Create a change in the increase or decrease of pollution at this location over time, by adding or subtracting a value from p_prime. This could potentially cause problems if the derivative becomes a large negative value while the time period update is also large, which could result in negative value of p. Also, this pollutant is obviously physically moving to a different location, not just disappearing (unless it is actually being removed from the air somehow), so the Element Array will need to track the movement. In other words, Pollutant Updaters that conceptually conserve the total amount of pollutant, like winds and diffusion, should not create a total increase in derivative (which would create pollutant from thin air over time) or create a total decrease in the derivative (which will cause pollutant to vanish over time)
+
+update(time):
+Update for a time period, probably as simple as p += time*del_p. This method will probably throw an Exception if the value of pollution attempts to go negative.
+
+The complete update process is as follows.
+1. This Element will be acted on by any number of Pollutant Updaters, which will each change the derivative (none will directly change the amount of pollutant in the Element.) Each Updater will modify the derivative value based on the current value of this Element and possibly other Elements.
+2. The Element will be updated for a time period, probably a very simple calculation, based on the current value and the derivative value.
+
+
+
+
+
+**********************
+Element Array Class
+
+A huge number of Elements will be held in the array. Each Element will be able to be acted on by Pollutant Updaters, which will increase or decrease the amount in each Element depending on values in the Element and adjacent Elements.
+
+Data: huge organized collection of Elements, maybe in a three dimensional python List.
+
+Methods: 
+modify_all(PollutantUpdater):
+act on every Element with this Pollutant Updater
+
+update_all(time):
+self-explanatory, call the update(time) function for every Element in the Array.
+
+
+
+**********************
+Pollutant Updater Class
+
+Each of these represents some physical process that can change the amount of pollutants in an element. Possibilities include Diffusion, Wind, Source (like a smokestack producing more pollutant) and there could possibly be others. There is a potential for two serious problems-- First, if the Pollutant Updater represents a "conservative" process, that is, one that should conceptually conserve the total amount of pollutant. There must be equal amounts of pollutant over every Element before and after the process acts on the Element Array. Second, because the amount of pollutant can't become negative, the Pollutant Updater must check for a situation in which it attempts to subtract an amount of pollutant greater than the amount that is currently present.
+
+Several of these Pollutant Updaters will act on every Element in the Element Array.
+
+Data and Methods: I'm not sure what kinds of Pollution Updaters we'll need, let alone what data and methods they will have! Except that they should have some methods that call modify_p_prime for some set of Elements.
+
+
+**********************
+Sensor Class
+
+This will simply keep track of the pollution of a certain location as time goes by. It will store the pollution value at a certain point at every time update. It will be a way we can observe the results of the simulation. We could possibly create a big array of Sensors over a wide area to get a visual idea of the behavior of the whole system at a given time. IF the simulation is efficient enough to run in real time we could possibly make an animation of some kind.
+
+Data: list of values for all time updates
+
+Methods: the methods associated with the list of values.
