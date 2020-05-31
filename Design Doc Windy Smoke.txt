@@ -12,6 +12,8 @@ p_prime #the derivative of the amount of pollution with respect to time. a float
 Methods:
 modify_p_prime(change_in_derivative):
  Create a change in the increase or decrease of pollution at this location over time, by adding or subtracting a value from p_prime. This could potentially cause problems if the derivative becomes a large negative value while the time period update is also large, which could result in negative value of p. Also, this pollutant is obviously physically moving to a different location, not just disappearing (unless it is actually being removed from the air somehow), so the Element Array will need to track the movement. In other words, Pollutant Updaters that conceptually conserve the total amount of pollutant, like winds and diffusion, should not create a total increase in derivative (which would create pollutant from thin air over time) or create a total decrease in the derivative (which will cause pollutant to vanish over time)
+    
+ 
 
 update(time):
 Update for a time period, probably as simple as p += time*del_p. This method will probably throw an Exception if the value of pollution attempts to go negative.
@@ -58,3 +60,10 @@ This will simply keep track of the pollution of a certain location as time goes 
 Data: list of values for all time updates
 
 Methods: the methods associated with the list of values.
+
+
+****************
+Key Questions/Ideas for Methods: 
+-I think we can introduce first the guassian dispersion equation as x(x,y,z) = Q/(2*pi*sigmay*sigmaz*u)*exp(-            (y^2/2*sigmay^2))*exp(-(z-h)^2/2*sigmaz^2)) to assign concentrations of pollutant (p) into the elements (cubical boxes of air) of our system. Since this isn't dependant on time, it can be a way for us to determine initial p values in each element. The equation only shows how much (p) would be in a location defined through x,y,and z per given stack paramenters. 
+-Then we can we can enter a simple pollutant decay function into the model and use that to show the decrease of the concentration over time as the pollutant under goes desposition from the atmosphere. Example, P(t) = Po*e^-rt where Po is the initial concentration, t is time and, r is the decay rate. 
+-We can use these two relationships with something like CO2 to show how long it would take CO2 to decay. However, CO2 may not be the best since it has a long atmospheric half life.
