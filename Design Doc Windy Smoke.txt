@@ -38,6 +38,10 @@ act on every Element with this Pollutant Updater
 update_all(time):
 self-explanatory, call the update(time) function for every Element in the Array.
 
+This will probably need a method to find the neighboring elements of a given element (face-neighboring, edge-neighboring, and corner-neighboring) to be used by the Pollutant Updaters.
+
+
+
 
 
 **********************
@@ -48,6 +52,8 @@ Each of these represents some physical process that can change the amount of pol
 Several of these Pollutant Updaters will act on every Element in the Element Array.
 
 Data and Methods: I'm not sure what kinds of Pollution Updaters we'll need, let alone what data and methods they will have! Except that they should have some methods that call modify_p_prime for some set of Elements.
+
+They will probably have a method to call modify_p_prime at some location
 
 
 **********************

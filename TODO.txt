@@ -1,0 +1,23 @@
+James:
+make running code for the element array and pollutant updaters to run in a simple simulation (requires code for element, elementarray, and pollutantupdater, as well as a run.py module, probably.)
+
+make working Decay pollutantupdater (representing the decrease of pollutant in an element as time goes by, without considering any other location.) and working Impulse pollutantupdater (which will instantly change the pollution in some number of elements and act only once. This could represent the spread of pollutants that happened before the simulator started running, or it could have other applications.)
+
+
+Tom:
+Find a way to describe the process of "wind blowing in a certain location, in a certain direction" as the amount of pollutant changing in an element and its neighboring elements over time.
+
+Find a way to describe the process of "pollutants gradually spreading out, even when not influenced by anything else." as the amount of pollutant in an element and its neighboring elements gradually changing over time.
+
+I think the process will be something along the lines of...
+p_prime (which, remember, is the partial derivative of pollutant in this element with respect to time) for the element will go down, to represent pollutants moving away.
+p_prime for face-neighboring elements will go up a smaller amount (where face-neighboring elements will share a face with this element)
+p_prime for edge-neighboring elements will go up an even smaller amount
+p_prime for corner-neighboring elements will go up an even smaller amount. (these smaller amounts could perhaps be zero.)
+
+Things to consider:
+The total sum of all changes in p_prime should be zero, because this is a conservative process, that is, it doesn't remove or add any pollutant to the air.  The total amount is conserved.
+This spreading process will be run for every element, so some spread from element A to element B in addition to spread from element B back to A could happen at the same time.
+If over a huge volume the amount of pollution is equal in every element, The change in every element should be zero, because the spread from element A to its neighbors should be equal in amount to the spread from every neighbor back to A.
+
+You might even decide that making a "realistic" model of this diffusion process is too difficult and make up some simpler model.
