@@ -1,19 +1,24 @@
 import elementarray as el
 import pollutantupdater as pol
 
-earray = el.elementarray(100,100,100)
+earray = el.elementarray(10,10,10)
 pollist = []
-pollist.append(blur_pollutantupdater())
+
+#ptest = pol.source_pollutantupdater()
+
+pollist.append(pol.blur_pollutantupdater(3.0))
+pollist.append(pol.source_pollutantupdater())
 
 
 #here's the main loop
-numloops = 100
+numloops = 1000
+frametime = 0.1
 for x in range(numloops):
 
     for pol in pollist:
         earray.pollutantupdateall(pol)
 
-    earray.elementupdateall()
+    earray.elementupdateall(frametime)
 
 #end main loop
     

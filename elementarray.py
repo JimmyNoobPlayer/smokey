@@ -96,7 +96,7 @@ syntax for making a numpy ndarray
     default_sizey = 1.
     default_sizez = 1.
 
-    def __init__(self, width, breadth, height,
+    def __init__(self, cols, rows, layers,
                  originx=default_originx, originy=default_originy, originz=default_originz,
                  sizex=default_sizex, sizey=default_sizey, sizez=default_sizez):
         self.originx = originx
@@ -107,11 +107,11 @@ syntax for making a numpy ndarray
         self.sizey = sizey
         self.sizez = sizez
 
-        self.width = width
-        self.breadth = breadth
-        self.height = height
+        self.cols = cols #the number of columns in the array, x
+        self.rows = rows #the number of rows in the array, y
+        self.layers = layers #the number of layers in the array, z
 
-        self.elements = [[[element() for k in range(height)] for j in range(breadth)] for i in range(width)]
+        self.elements = [[[element() for i in range(cols)] for j in range(rows)] for k in range(layers)]
 
     def _index_from_loc(self, loctuple):
         '''returns the integer tuple of the index of the element at that location'''
@@ -139,12 +139,155 @@ syntax for making a numpy ndarray
         locz = self.originz + (indextuple[2]+0.5)*self.sizez
         return (locx,locy,locz)
 
-##    def pollutantupdateall(self, pu):
-##        for z_layer in elements:
-##            for y_row in z_layer:
-##                for x_col in y_row:
-                    
+    def _ele_from_index(self, indextuple):
+        return self.elements[indextuple[0]][indextuple[1]][indextuple[2]]
+
+    def _ele_from_index_if_valid(self, indextuple):
+        if (self._is_valid_index(indextuple)):
+            return self._ele_from_index(indextuple)
+        else:
+            return False
+
+    def _is_valid_index(self, indextuple):
+
+        return (indextuple[0]>=0 and indextuple[0]<self.rows and
+                indextuple[1]>=0 and indextuple[1]<self.cols and
+                indextuple[2]>=0 and indextuple[2]<self.layers)
+
+##alternate _is_valid_index:
+##        validflag = True
+##        try:
+##            throwaway = self.elements[indextuple[0]][indextuple[1]][indextuple[2]]
+##        except IndexError as error:
+##            validflag = False
+##        return validflag
+
+
+
+
+
+##oops, I think I need to use the non-pythonic C index idiom because
+##of the weird way I set up the elements in the elementarray. The way
+##they are now, an element object has no method to find its own index
+##in the elementarray. I need to pass an index tuple to the pollutantupdater,
+##not an element object.
+    def pollutantupdateall(self, pu):
+        for k in range(self.layers):
+            for j in range(self.rows):
+                for i in range(self.cols):
+                    pu.actonelement((i,j,k), self)
+
+
+
+#this function could use similar code to the pullutantupdateall above, but
+#it can also use this code because every element is updated independently of position.
+    def elementupdateall(self, time):
+        for z_layer in self.elements:
+            for y_row in z_layer:
+                for x_element in y_row:
+                    x_element.update(time)  
+
+
+
+
+
+    '''
+    #************ C idiom:
+
+    C generally uses arrays, python generally uses lists (or sometimes
+    tuples). They are used in very similar ways.
+
+    #the humble for loop, C:
+        for(int i=0; i<numElementsInList; i++) {
+            #do something for each element, accessed by elements[i]
+        }
+
+    #the triple-nested for loop, C:
+        for(int i=0; i<numCols; i++) {
+            for(int j=0; j<numRows; j++) {
+                for(int k=0; k<numLayers; k++) {
+                    #do something for each element, accessed by self.elements[i][j][k]
+                    pu.actonelement(self.elements[i][j][k], self.elements);
+                }
+            }
+        }
+
+
+    **** Python idiom:
+     #lists can automatically be changed into "iterators" that break themselves
+     down. No index ints like i,j,k are needed!
+
+     for x in ElementList:
+         # do something for each element x in the list
+         x.something()
+
+     If you really want to use a separate index, you can make something with range():
+     for i in range(0, numElements):
+         elementArray[i].something()
+
+     a triple-nested list is a list of lists of lists. When a "for" statement tries to
+     turn it into an iterator, it sees a list of "x", and the "x" turns out to be double-lists.
+     The iterator will return a sequence of double-lists. When another "for" statement
+     turns that into an iterator, it sees a list of lists, so it will return a sequence
+     of lists. Then a third "for" statement can turn that into an iterator of element
+     objects. You can see this breakdown in the triple for-loop above.
+
+     update: I changed it to use the c-style indexers.
+        '''
+            
         
 
+    def getallneighbors(self, indextuple):
+        '''returns a list of all 26 elements neighboring this
+element. Checks that the elements exist in the array before
+trying to access them. The elements are expected to be accessed
+for both reading and writing, and they are not removed or moved
+in the original 3d list of elements in this elementarray.
+indextuple could be outside the array's indexes, which could
+be usefull when the intention is to act on elements on the edge'''
+        pass #not implemented yet. It's important to figure out
+             #a loop for this so we don't need to copy out 26 lines of code.
+
+    def getfaceneighbors(self, ind):
+        '''ind is a tuple representing the index of the element we are
+looking at. the function returns a list of the 6 elements that share a face with
+the element given by ind. ind could possibly be
+outside the exisiting indexes of the elementarray, but only
+existing elements will be returned in the output of this function.'''
+        #I can think of a few ways to organize this function to cut down on
+        #repetition. I'll use a helper function _append_if_valid
+        #I changed indextuple to ind just to avoid some typing.
+        outputlist = []
+        
+##        querytuple = (indextuple[0]+1, indextuple[1], indextuple[2])
+##        query = self._ele_from_index_if_valid(querytuple)
+##        if (type(query)==element):
+##            outputlist.append(query)
+##
+##        querytuple = (indextuple[0]-1, indextuple[1], indextuple[2])
+##        query = self._ele_from_index_if_valid(querytuple)
+##        if (type(query)==element):
+##            outputlist.append(query)
+
+        ##we could repeat that block of four lines 6 times, but copying has two
+        ##big problems: It's easy to make a mistake changing the copied text, and
+        ##changing the code or updating later is far more work and far more
+        ##likely to introduce errors.
 
 
+        #this still includes a lot of copying! but the copying is limited to a reasonable level.
+        self._append_if_valid(ind[0]+1, ind[1], ind[2], outputlist)
+        self._append_if_valid(ind[0]-1, ind[1], ind[2], outputlist)
+        self._append_if_valid(ind[0], ind[1]+1, ind[2], outputlist)
+        self._append_if_valid(ind[0], ind[1]-1, ind[2], outputlist)
+        self._append_if_valid(ind[0], ind[1], ind[2]+1, outputlist)
+        self._append_if_valid(ind[0], ind[1], ind[2]-1, outputlist)
+
+        return outputlist
+
+    def _append_if_valid(self, x,y,z, outputlist):
+        querytuple = (x,y,z)
+        query = self._ele_from_index_if_valid(querytuple)
+        if (type(query)==element):
+            outputlist.append(query)
+            
